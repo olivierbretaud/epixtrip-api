@@ -13,4 +13,17 @@ const start = async (): Promise<void> => {
 	}
 };
 
+const shutdown = async (): Promise<void> => {
+	try {
+		await app.close();
+		process.exit(0);
+	} catch (err) {
+		app.log.error(err);
+		process.exit(1);
+	}
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
 start();

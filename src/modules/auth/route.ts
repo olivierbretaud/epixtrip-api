@@ -17,6 +17,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 	const authService = createAuthService(fastify);
 
 	fastify.withTypeProvider<ZodTypeProvider>().post('/login', {
+		config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
 		schema: {
 			tags: ['Auth'],
 			summary: 'Login',
@@ -49,6 +50,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 	});
 
 	fastify.withTypeProvider<ZodTypeProvider>().post('/forgot-password', {
+		config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
 		schema: {
 			tags: ['Auth'],
 			summary: 'Forgot password',

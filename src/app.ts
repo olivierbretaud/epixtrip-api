@@ -68,6 +68,16 @@ export function buildApp() {
 		return reply.status(500).send({ message: 'Internal server error' });
 	});
 
+	app.register(import('@fastify/helmet'));
+	app.register(import('@fastify/rate-limit'), {
+		max: 100,
+		timeWindow: '1 minute',
+	});
+	app.register(import('@fastify/cors'), {
+		origin: process.env.CORS_ORIGIN ?? '*',
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+		allowedHeaders: ['Authorization', 'Content-Type'],
+	});
 	app.register(sensible);
 	app.register(prismaPlugin);
 	app.register(jwtPlugin);
