@@ -10,6 +10,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { AppError } from './errors/AppError.js';
 import jwtPlugin from './plugins/jwt.js';
+import mailerPlugin from './plugins/mailer.js';
 import prismaPlugin from './plugins/prisma.js';
 import routes from './routes/index.js';
 
@@ -80,6 +81,7 @@ export function buildApp() {
 	});
 	app.register(sensible);
 	app.register(prismaPlugin);
+	app.register(mailerPlugin);
 	app.register(jwtPlugin);
 	app.register(routes, { prefix: '/api' });
 

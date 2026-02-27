@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
+import { env } from '../../config/env.js';
+import { renderResetPasswordEmail } from '../../emails/reset-password.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuthRepository } from './repository.js';
 
@@ -48,10 +50,21 @@ export function createAuthService(fastify: FastifyInstance) {
 			const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 			await repo.setResetToken(user.id, token, expires);
 
-			// In production: send email with reset link containing the token
+			const resetLink = `${env.APP_URL}/reset-password?token=${token}`;
+			const html = await renderResetPasswordEmail({
+				firstName: user.firstName,
+				resetLink,
+			});
+
+			await fastify.mailer.send({
+				to: user.email,
+				subject: 'Reset your EpixTrip password',
+				html,
+			});
+
 			return {
 				message: 'If this email exists, a reset link has been sent.',
-				...(process.env.NODE_ENV !== 'production' && { resetToken: token }),
+				...(env.NODE_ENV !== 'production' && { resetToken: token }),
 			};
 		},
 
