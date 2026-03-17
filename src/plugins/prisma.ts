@@ -13,13 +13,8 @@ const prismaPlugin: FastifyPluginAsync = fp(async (server) => {
 	const baseUrl = process.env.POSTGRES_PRISMA_URL ?? '';
 	const isProduction = process.env.NODE_ENV === 'production';
 
-	const url = new URL(baseUrl);
-	if (isProduction) {
-		url.searchParams.set('sslmode', 'require');
-	}
-
 	const adapter = new PrismaPg({
-		connectionString: url.toString(),
+		connectionString: baseUrl,
 		...(isProduction && { ssl: { rejectUnauthorized: false } }),
 	});
 	const prisma = new PrismaClient({ adapter });
