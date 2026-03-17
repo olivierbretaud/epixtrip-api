@@ -12,20 +12,26 @@ declare module '@fastify/jwt' {
 
 declare module 'fastify' {
 	interface FastifyInstance {
-		authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+		authenticate: (
+			request: FastifyRequest,
+			reply: FastifyReply,
+		) => Promise<void>;
 	}
 }
 
 const jwtPlugin: FastifyPluginAsync = fp(async (fastify) => {
 	await fastify.register(jwt, { secret: env.JWT_SECRET });
 
-	fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
-		try {
-			await request.jwtVerify();
-		} catch (err) {
-			reply.send(err);
-		}
-	});
+	fastify.decorate(
+		'authenticate',
+		async (request: FastifyRequest, reply: FastifyReply) => {
+			try {
+				await request.jwtVerify();
+			} catch (err) {
+				reply.send(err);
+			}
+		},
+	);
 });
 
 export default jwtPlugin;
