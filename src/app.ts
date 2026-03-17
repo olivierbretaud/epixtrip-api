@@ -113,7 +113,10 @@ export function buildApp() {
 
 // Vercel serverless handler
 const _app = buildApp();
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export default async function handler(
+	req: IncomingMessage,
+	res: ServerResponse,
+): Promise<void> {
 	await _app.ready();
 	_app.server.emit('request', req, res);
 }
