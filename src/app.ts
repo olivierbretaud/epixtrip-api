@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
@@ -104,4 +105,11 @@ export function buildApp() {
 	app.register(routes, { prefix: '/api' });
 
 	return app;
+}
+
+// Vercel serverless handler
+const _app = buildApp();
+export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+	await _app.ready();
+	_app.server.emit('request', req, res);
 }
