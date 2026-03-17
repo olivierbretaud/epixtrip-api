@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
 	POSTGRES_PRISMA_URL: z.url(),
+	POSTGRES_URL_NON_POOLING: z.url().optional(),
 	NODE_ENV: z
 		.enum(['development', 'production', 'test'])
 		.default('development'),
