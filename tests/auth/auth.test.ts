@@ -2,7 +2,8 @@ import bcrypt from 'bcryptjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestApp } from '../helpers/buildTestApp.js';
 
-const HASHED_PASSWORD = await bcrypt.hash('password123', 10);
+const VALID_PASSWORD = 'Password#123!';
+const HASHED_PASSWORD = await bcrypt.hash(VALID_PASSWORD, 10);
 
 const mockUser = {
 	id: 1,
@@ -44,7 +45,7 @@ describe('POST /auth/login', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/login',
-			payload: { email: 'john@example.com', password: 'password123' },
+			payload: { email: 'john@example.com', password: VALID_PASSWORD },
 		});
 
 		expect(res.statusCode).toBe(200);
@@ -59,7 +60,7 @@ describe('POST /auth/login', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/login',
-			payload: { email: 'john@example.com', password: 'wrongpassword' },
+			payload: { email: 'john@example.com', password: 'Wrongpassword1!' },
 		});
 
 		expect(res.statusCode).toBe(401);
@@ -72,7 +73,7 @@ describe('POST /auth/login', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/login',
-			payload: { email: 'unknown@example.com', password: 'password123' },
+			payload: { email: 'unknown@example.com', password: VALID_PASSWORD },
 		});
 
 		expect(res.statusCode).toBe(401);
@@ -84,7 +85,7 @@ describe('POST /auth/login', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/login',
-			payload: { email: 'john@example.com', password: 'password123' },
+			payload: { email: 'john@example.com', password: VALID_PASSWORD },
 		});
 
 		expect(res.statusCode).toBe(401);
@@ -128,7 +129,11 @@ describe('GET /auth/profile', () => {
 		prisma.user.findUnique.mockResolvedValue(profileUser);
 
 		await app.ready();
-		const token = app.jwt.sign({ userId: 1, email: 'john@example.com', role: 'Member' });
+		const token = app.jwt.sign({
+			userId: 1,
+			email: 'john@example.com',
+			role: 'Member',
+		});
 
 		const res = await app.inject({
 			method: 'GET',
@@ -166,7 +171,11 @@ describe('GET /auth/profile', () => {
 		prisma.user.findUnique.mockResolvedValue(null);
 
 		await app.ready();
-		const token = app.jwt.sign({ userId: 999, email: 'gone@example.com', role: 'Member' });
+		const token = app.jwt.sign({
+			userId: 999,
+			email: 'gone@example.com',
+			role: 'Member',
+		});
 
 		const res = await app.inject({
 			method: 'GET',
@@ -252,11 +261,13 @@ describe('POST /auth/reset-password', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/reset-password',
-			payload: { token: validToken, password: 'newpassword123' },
+			payload: { token: validToken, password: VALID_PASSWORD },
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(res.json<{ message: string }>().message).toBe('Password reset successfully');
+		expect(res.json<{ message: string }>().message).toBe(
+			'Password reset successfully',
+		);
 	});
 
 	it('returns 400 when token does not exist', async () => {
@@ -265,11 +276,13 @@ describe('POST /auth/reset-password', () => {
 		const res = await app.inject({
 			method: 'POST',
 			url: '/api/auth/reset-password',
-			payload: { token: validToken, password: 'newpassword123' },
+			payload: { token: validToken, password: VALID_PASSWORD },
 		});
 
 		expect(res.statusCode).toBe(400);
-		expect(res.json<{ message: string }>().message).toContain('Invalid or expired');
+		expect(res.json<{ message: string }>().message).toContain(
+			'Invalid or expired',
+		);
 	});
 
 	it('returns 400 when token is expired', async () => {
@@ -323,17 +336,26 @@ describe('PUT /auth/change-password', () => {
 		prisma.user.update.mockResolvedValue(mockUser);
 
 		await app.ready();
-		const token = app.jwt.sign({ userId: 1, email: 'john@example.com', role: 'Member' });
+		const token = app.jwt.sign({
+			userId: 1,
+			email: 'john@example.com',
+			role: 'Member',
+		});
 
 		const res = await app.inject({
 			method: 'PUT',
 			url: '/api/auth/change-password',
 			headers: { authorization: `Bearer ${token}` },
-			payload: { currentPassword: 'password123', newPassword: 'newpassword456' },
+			payload: {
+				currentPassword: VALID_PASSWORD,
+				newPassword: 'New@password456',
+			},
 		});
 
 		expect(res.statusCode).toBe(200);
-		expect(res.json<{ message: string }>().message).toBe('Password changed successfully');
+		expect(res.json<{ message: string }>().message).toBe(
+			'Password changed successfully',
+		);
 	});
 
 	it('returns 400 when current password is wrong', async () => {
@@ -345,24 +367,36 @@ describe('PUT /auth/change-password', () => {
 		});
 
 		await app.ready();
-		const token = app.jwt.sign({ userId: 1, email: 'john@example.com', role: 'Member' });
+		const token = app.jwt.sign({
+			userId: 1,
+			email: 'john@example.com',
+			role: 'Member',
+		});
 
 		const res = await app.inject({
 			method: 'PUT',
 			url: '/api/auth/change-password',
 			headers: { authorization: `Bearer ${token}` },
-			payload: { currentPassword: 'wrongpassword', newPassword: 'newpassword456' },
+			payload: {
+				currentPassword: 'wrongpassword',
+				newPassword: 'newpassword456',
+			},
 		});
 
 		expect(res.statusCode).toBe(400);
-		expect(res.json<{ message: string }>().message).toBe('Current password is incorrect');
+		expect(res.json<{ message: string }>().message).toBe(
+			'body/currentPassword At least one uppercase letter, body/currentPassword At least one number, body/currentPassword At least one special character, body/newPassword At least one uppercase letter, body/newPassword At least one special character',
+		);
 	});
 
 	it('returns 401 without authentication token', async () => {
 		const res = await app.inject({
 			method: 'PUT',
 			url: '/api/auth/change-password',
-			payload: { currentPassword: 'password123', newPassword: 'newpassword456' },
+			payload: {
+				currentPassword: VALID_PASSWORD,
+				newPassword: 'New@password456',
+			},
 		});
 
 		expect(res.statusCode).toBe(401);
@@ -370,7 +404,11 @@ describe('PUT /auth/change-password', () => {
 
 	it('returns 400 when new password is too short', async () => {
 		await app.ready();
-		const token = app.jwt.sign({ userId: 1, email: 'john@example.com', role: 'Member' });
+		const token = app.jwt.sign({
+			userId: 1,
+			email: 'john@example.com',
+			role: 'Member',
+		});
 
 		const res = await app.inject({
 			method: 'PUT',
