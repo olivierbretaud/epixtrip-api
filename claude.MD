@@ -204,7 +204,7 @@ model User {
 Required variables (validated at startup):
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+POSTGRES_PRISMA_URL=postgresql://user:password@localhost:5432/dbname
 NODE_ENV=development
 PORT=3000
 HOST=0.0.0.0
