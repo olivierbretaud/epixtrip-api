@@ -10,8 +10,12 @@ declare module 'fastify' {
 }
 
 const prismaPlugin: FastifyPluginAsync = fp(async (server) => {
+	const baseUrl = process.env.POSTGRES_PRISMA_URL ?? '';
+	const url = new URL(baseUrl);
+	url.searchParams.set('sslmode', 'verify-full');
+
 	const adapter = new PrismaPg({
-		connectionString: process.env.POSTGRES_PRISMA_URL,
+		connectionString: url.toString(),
 		ssl: {
 			rejectUnauthorized: true,
 		},
