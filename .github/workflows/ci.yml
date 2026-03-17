@@ -23,14 +23,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
       - name: Lint & format
         run: pnpm biome check ./src
 
       - name: Typecheck
         run: pnpm tsc --noEmit
-
-      - name: Generate Prisma client
-        run: pnpm prisma generate
 
       - name: Tests
         run: pnpm test
