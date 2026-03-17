@@ -11,14 +11,16 @@ declare module 'fastify' {
 
 const prismaPlugin: FastifyPluginAsync = fp(async (server) => {
 	const baseUrl = process.env.POSTGRES_PRISMA_URL ?? '';
+	const isProduction = process.env.NODE_ENV === 'production';
+
 	const url = new URL(baseUrl);
-	url.searchParams.set('sslmode', 'verify-full');
+	if (isProduction) {
+		url.searchParams.set('sslmode', 'require');
+	}
 
 	const adapter = new PrismaPg({
 		connectionString: url.toString(),
-		ssl: {
-			rejectUnauthorized: true,
-		},
+		...(isProduction && { ssl: { rejectUnauthorized: false } }),
 	});
 	const prisma = new PrismaClient({ adapter });
 
