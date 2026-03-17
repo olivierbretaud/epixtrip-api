@@ -9,14 +9,14 @@ const envSchema = z.object({
 	PORT: z.coerce.number().default(3000),
 	HOST: z.string().default('0.0.0.0'),
 	JWT_SECRET: z.string().min(32),
-	SMTP_HOST: z.string(),
+	SMTP_HOST: z.string().default('SMTP_HOST'),
 	SMTP_PORT: z.coerce.number().default(587),
 	SMTP_SECURE: z
 		.string()
 		.transform((v) => v === 'true')
 		.default(false),
-	SMTP_USER: z.string(),
-	SMTP_PASS: z.string(),
+	SMTP_USER: z.string().default('SMTP_USER'),
+	SMTP_PASS: z.string().default('SMTP_PASS'),
 	EMAIL_FROM: z.string().default('EpixTrip <no-reply@epixtrip.com>'),
 	APP_URL: z.url().default('http://localhost:3000'),
 });
