@@ -12,6 +12,9 @@ declare module 'fastify' {
 const prismaPlugin: FastifyPluginAsync = fp(async (server) => {
 	const adapter = new PrismaPg({
 		connectionString: process.env.POSTGRES_PRISMA_URL,
+		ssl: {
+			rejectUnauthorized: true,
+		},
 	});
 	const prisma = new PrismaClient({ adapter });
 
