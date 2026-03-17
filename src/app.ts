@@ -1,13 +1,14 @@
+import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import sensible from '@fastify/sensible';
 import { Prisma } from '@prisma/client';
-import Fastify from 'fastify';
+import Fastify, { type FastifyError } from 'fastify';
 import {
+	jsonSchemaTransform,
 	serializerCompiler,
 	validatorCompiler,
-	jsonSchemaTransform,
 } from 'fastify-type-provider-zod';
+
 import { AppError } from './errors/AppError.js';
 import jwtPlugin from './plugins/jwt.js';
 import mailerPlugin from './plugins/mailer.js';
@@ -51,7 +52,20 @@ export function buildApp() {
 		routePrefix: '/docs',
 	});
 
-	app.setErrorHandler((error, _request, reply) => {
+	app.setErrorHandler((error: FastifyError, _request, reply) => {
+		if (error.validation) {
+			return reply.status(400).send({
+				statusCode: 400,
+				message: 'Validation failed',
+				errors: (
+					error.validation as { instancePath: string; message?: string }[]
+				).map((v) => ({
+					field: v.instancePath.replace(/^\//, ''),
+					message: v.message,
+				})),
+			});
+		}
+
 		if (error instanceof AppError) {
 			return reply.status(error.statusCode).send({ message: error.message });
 		}
@@ -63,6 +77,10 @@ export function buildApp() {
 			if (error.code === 'P2025') {
 				return reply.status(404).send({ message: 'Resource not found' });
 			}
+		}
+
+		if (error.statusCode) {
+			return reply.status(error.statusCode).send({ message: error.message });
 		}
 
 		app.log.error(error);

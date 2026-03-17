@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../../config/env.js';
 import { renderResetPasswordEmail } from '../../emails/reset-password.js';
@@ -71,7 +71,11 @@ export function createAuthService(fastify: FastifyInstance) {
 		async resetPassword(token: string, newPassword: string) {
 			const user = await repo.findByResetToken(token);
 
-			if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {
+			if (
+				!user ||
+				!user.passwordResetExpires ||
+				user.passwordResetExpires < new Date()
+			) {
 				throw new AppError(400, 'Invalid or expired reset token');
 			}
 
@@ -81,7 +85,11 @@ export function createAuthService(fastify: FastifyInstance) {
 			return { message: 'Password reset successfully' };
 		},
 
-		async changePassword(userId: number, currentPassword: string, newPassword: string) {
+		async changePassword(
+			userId: number,
+			currentPassword: string,
+			newPassword: string,
+		) {
 			const user = await repo.findByIdWithPassword(userId);
 
 			if (!user) {
