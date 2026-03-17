@@ -102,6 +102,9 @@ export function buildApp() {
 	app.register(prismaPlugin);
 	app.register(mailerPlugin);
 	app.register(jwtPlugin);
+	app.get('/favicon.ico', async (_, reply) => reply.code(204).send());
+	app.get('/favicon.png', async (_, reply) => reply.code(204).send());
+
 	app.register(routes, { prefix: '/api' });
 
 	return app;
