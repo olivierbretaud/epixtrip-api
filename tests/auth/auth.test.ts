@@ -138,7 +138,7 @@ describe('GET /auth/profile', () => {
 		const res = await app.inject({
 			method: 'GET',
 			url: '/api/auth/profile',
-			headers: { authorization: `Bearer ${token}totott` },
+			headers: { authorization: `Bearer ${token}` },
 		});
 
 		expect(res.statusCode).toBe(200);
