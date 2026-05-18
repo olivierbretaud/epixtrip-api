@@ -34,7 +34,10 @@ export function createTravelRepository(prisma: PrismaClient) {
 			});
 		},
 
-		async update(id: number, data: { title?: string; description?: string; isPublic?: boolean }) {
+		async update(
+			id: number,
+			data: { title?: string; description?: string; isPublic?: boolean },
+		) {
 			return prisma.travel.update({
 				where: { id },
 				data,
