@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import authRoutes from '../modules/auth/route.js';
+import travelRoutes from '../modules/travel/route.js';
 
 const routes: FastifyPluginAsync = async (server) => {
 	server.withTypeProvider<ZodTypeProvider>().get(
@@ -22,6 +23,7 @@ const routes: FastifyPluginAsync = async (server) => {
 	);
 
 	server.register(authRoutes, { prefix: '/auth' });
+	server.register(travelRoutes, { prefix: '/travels' });
 };
 
 export default routes;
