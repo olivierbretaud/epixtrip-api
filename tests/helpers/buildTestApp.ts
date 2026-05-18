@@ -7,6 +7,7 @@ import {
 } from 'fastify-type-provider-zod';
 import { vi } from 'vitest';
 import authRoutes from '../../src/modules/auth/route.js';
+import travelRoutes from '../../src/modules/travel/route.js';
 import jwtPlugin from '../../src/plugins/jwt.js';
 
 export function buildTestApp(prismaMock: Partial<PrismaClient>) {
@@ -27,6 +28,7 @@ export function buildTestApp(prismaMock: Partial<PrismaClient>) {
 
 	app.register(jwtPlugin);
 	app.register(authRoutes, { prefix: '/api/auth' });
+	app.register(travelRoutes, { prefix: '/api/travels' });
 
 	return app;
 }
