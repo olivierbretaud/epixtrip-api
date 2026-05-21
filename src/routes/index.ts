@@ -23,7 +23,7 @@ const routes: FastifyPluginAsync = async (server) => {
 	);
 
 	server.register(authRoutes, { prefix: '/auth' });
-	server.register(travelRoutes, { prefix: '/travels' });
+	server.register(travelRoutes, { prefix: '/travel' });
 };
 
 export default routes;

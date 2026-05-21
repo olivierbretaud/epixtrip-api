@@ -28,7 +28,7 @@ export function buildTestApp(prismaMock: Partial<PrismaClient>) {
 
 	app.register(jwtPlugin);
 	app.register(authRoutes, { prefix: '/api/auth' });
-	app.register(travelRoutes, { prefix: '/api/travels' });
+	app.register(travelRoutes, { prefix: '/api/travel' });
 
 	return app;
 }
