@@ -5,6 +5,25 @@ const travelSelect = {
 	title: true,
 	description: true,
 	isPublic: true,
+	cover: {
+		select: {
+			id: true,
+			url: true,
+			mimeType: true,
+			size: true,
+			takenAt: true,
+			lat: true,
+			lng: true,
+			place: true,
+			description: true,
+			city: true,
+			region: true,
+			state: true,
+			countryCode: true,
+			travelId: true,
+			createdAt: true,
+		},
+	},
 	authorId: true,
 	createdAt: true,
 	updatedAt: true,
@@ -42,6 +61,29 @@ export function createTravelRepository(prisma: PrismaClient) {
 				where: { id },
 				data,
 				select: travelSelect,
+			});
+		},
+
+		async setCoverIfEmpty(travelId: number, mediaId: number): Promise<void> {
+			await prisma.travel.updateMany({
+				where: { id: travelId, coverId: null },
+				data: { coverId: mediaId },
+			});
+		},
+
+		async setCover(travelId: number, mediaId: number): Promise<void> {
+			await prisma.travel.update({
+				where: { id: travelId },
+				data: { coverId: mediaId },
+			});
+		},
+
+		async findMediaKeys(
+			travelId: number,
+		): Promise<{ key: string; mimeType: string }[]> {
+			return prisma.media.findMany({
+				where: { travelId },
+				select: { key: true, mimeType: true },
 			});
 		},
 

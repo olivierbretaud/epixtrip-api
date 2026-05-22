@@ -1,11 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestApp } from '../helpers/buildTestApp.js';
 
+vi.mock('../../src/lib/cloudinary.js', () => ({
+	deleteFromCloudinary: vi.fn().mockResolvedValue(undefined),
+	uploadToCloudinary: vi.fn().mockResolvedValue('https://res.cloudinary.com/test/image.jpg'),
+}));
+
 const mockTravel = {
 	id: 1,
 	title: 'My Trip to Paris',
 	description: 'A wonderful trip',
 	isPublic: false,
+	cover: null,
 	authorId: 1,
 	createdAt: new Date('2024-01-01T00:00:00.000Z'),
 	updatedAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -23,6 +29,9 @@ function makePrismaMock() {
 			create: vi.fn(),
 			update: vi.fn(),
 			delete: vi.fn(),
+		},
+		media: {
+			findMany: vi.fn(),
 		},
 	};
 }
@@ -321,6 +330,7 @@ describe('DELETE /api/travel/:id', () => {
 
 	it('returns 200 on successful deletion', async () => {
 		prisma.travel.findUnique.mockResolvedValue(mockTravel);
+		prisma.media.findMany.mockResolvedValue([]);
 		prisma.travel.delete.mockResolvedValue(mockTravel);
 
 		await app.ready();

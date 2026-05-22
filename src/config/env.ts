@@ -19,6 +19,11 @@ const envSchema = z.object({
 	SMTP_PASS: z.string().default('SMTP_PASS'),
 	EMAIL_FROM: z.string().default('EpixTrip <no-reply@epixtrip.com>'),
 	APP_URL: z.url().default('http://localhost:3000'),
+	CLOUDINARY_CLOUD_NAME: z.string(),
+	CLOUDINARY_API_KEY: z.string(),
+	CLOUDINARY_API_SECRET: z.string(),
+	AUTH_EMAIL: z.string().optional(),
+	AUTH_PWD: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

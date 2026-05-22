@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { AppError } from '../../errors/AppError.js';
+import { deleteFromCloudinary } from '../../lib/cloudinary.js';
+import { mimeToResourceType } from '../media/schema.js';
 import { createTravelRepository } from './repository.js';
 
 function toDto(travel: {
@@ -7,12 +9,36 @@ function toDto(travel: {
 	title: string;
 	description: string | null;
 	isPublic: boolean;
+	cover: {
+		id: number;
+		url: string;
+		mimeType: string;
+		size: number;
+		takenAt: Date | null;
+		lat: number | null;
+		lng: number | null;
+		place: string | null;
+		description: string | null;
+		city: string | null;
+		region: string | null;
+		state: string | null;
+		countryCode: string | null;
+		travelId: number;
+		createdAt: Date;
+	} | null;
 	authorId: number;
 	createdAt: Date;
 	updatedAt: Date;
 }) {
 	return {
 		...travel,
+		cover: travel.cover
+			? {
+					...travel.cover,
+					takenAt: travel.cover.takenAt?.toISOString() ?? null,
+					createdAt: travel.cover.createdAt.toISOString(),
+				}
+			: null,
 		createdAt: travel.createdAt.toISOString(),
 		updatedAt: travel.updatedAt.toISOString(),
 	};
@@ -57,7 +83,15 @@ export function createTravelService(fastify: FastifyInstance) {
 			const existing = await repo.findById(id);
 			if (!existing) throw new AppError(404, 'Travel not found');
 			if (existing.authorId !== authorId) throw new AppError(403, 'Forbidden');
+			const medias = await repo.findMediaKeys(id);
 			await repo.delete(id);
+			await Promise.all(
+				medias.map(({ key, mimeType }) =>
+					deleteFromCloudinary(key, mimeToResourceType(mimeType)).catch(
+						() => null,
+					),
+				),
+			);
 			return { message: 'Travel deleted successfully' };
 		},
 	};

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { mediaResponse } from '../media/schema.js';
 
 export const createTravelBody = z.object({
 	title: z.string().min(1),
@@ -21,6 +22,7 @@ export const travelResponse = z.object({
 	title: z.string(),
 	description: z.string().nullable(),
 	isPublic: z.boolean().default(false),
+	cover: mediaResponse.nullable(),
 	authorId: z.number(),
 	createdAt: z.string(),
 	updatedAt: z.string(),

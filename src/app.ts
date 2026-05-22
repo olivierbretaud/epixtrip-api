@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import sensible from '@fastify/sensible';
+import type { SwaggerTransform } from '@fastify/swagger';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { Prisma } from '@prisma/client';
@@ -9,6 +10,30 @@ import {
 	serializerCompiler,
 	validatorCompiler,
 } from 'fastify-type-provider-zod';
+
+function isZodSchema(value: unknown): boolean {
+	return (
+		value != null &&
+		typeof value === 'object' &&
+		'parse' in (value as object) &&
+		typeof (value as { parse: unknown }).parse === 'function'
+	);
+}
+
+const swaggerTransform: SwaggerTransform = (input) => {
+	const schema = input.schema ?? {};
+	const { body, consumes } = schema as typeof schema & { consumes?: string[] };
+	if (body && !isZodSchema(body)) {
+		const { body: _body, consumes: _consumes, ...rest } = schema as typeof schema & {
+			consumes?: string[];
+		};
+		const result = jsonSchemaTransform({ ...input, schema: rest });
+		result.schema.body = body;
+		if (consumes) (result.schema as Record<string, unknown>).consumes = consumes;
+		return result;
+	}
+	return jsonSchemaTransform(input);
+};
 
 import { AppError } from './errors/AppError.js';
 import jwtPlugin from './plugins/jwt.js';
@@ -46,7 +71,7 @@ export function buildApp() {
 				},
 			},
 		},
-		transform: jsonSchemaTransform,
+		transform: swaggerTransform,
 	});
 
 	app.register(swaggerUi, {
@@ -99,6 +124,9 @@ export function buildApp() {
 		allowedHeaders: ['Authorization', 'Content-Type'],
 	});
 	app.register(sensible);
+	app.register(import('@fastify/multipart'), {
+		limits: { fileSize: 50 * 1024 * 1024, files: 20 },
+	});
 	app.register(prismaPlugin);
 	app.register(mailerPlugin);
 	app.register(jwtPlugin);

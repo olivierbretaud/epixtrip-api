@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { env } from '../../config/env.js';
 
 const strongPassword = z
 	.string()
@@ -8,9 +9,15 @@ const strongPassword = z
 	.regex(/[0-9]/, 'At least one number')
 	.regex(/[^A-Za-z0-9]/, 'At least one special character');
 
+const isDev = env.NODE_ENV === 'development';
+
 export const loginBody = z.object({
-	email: z.string().min(1),
-	password: strongPassword,
+	email: isDev && env.AUTH_EMAIL
+		? z.string().min(1).default(env.AUTH_EMAIL)
+		: z.string().min(1),
+	password: isDev && env.AUTH_PWD
+		? strongPassword.default(env.AUTH_PWD)
+		: strongPassword,
 });
 
 export const loginResponse = z.object({
