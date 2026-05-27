@@ -16,7 +16,8 @@ function toMediaDto(m: MediaRow) {
 		url: m.url,
 		mimeType: m.mimeType,
 		size: m.size,
-		takenAt: m.takenAt instanceof Date ? m.takenAt.toISOString() : (m.takenAt ?? null),
+		takenAt:
+			m.takenAt instanceof Date ? m.takenAt.toISOString() : (m.takenAt ?? null),
 		lat: m.lat != null && Number.isFinite(m.lat) ? m.lat : null,
 		lng: m.lng != null && Number.isFinite(m.lng) ? m.lng : null,
 		place: m.place ?? null,
@@ -26,7 +27,8 @@ function toMediaDto(m: MediaRow) {
 		state: m.state ?? null,
 		countryCode: m.countryCode ?? null,
 		travelId: m.travelId,
-		createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
+		createdAt:
+			m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
 	};
 }
 
