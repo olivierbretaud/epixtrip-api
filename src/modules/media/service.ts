@@ -115,7 +115,7 @@ export function createMediaService(fastify: FastifyInstance) {
 
 				const exif = await extractExif(tempPath);
 
-				if (exif.lat === null || exif.lng === null) {
+				if (exif.lat === null || exif.lng === null || !Number.isFinite(exif.lat) || !Number.isFinite(exif.lng)) {
 					unlinkSync(tempPath);
 					throw new AppError(422, `File "${file.filename}" has no GPS data`);
 				}
