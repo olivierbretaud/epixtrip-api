@@ -28,18 +28,25 @@ async function extractExif(
 ): Promise<{ takenAt: Date | null; lat: number | null; lng: number | null }> {
 	try {
 		const data = await exifr.parse(filePath, {
-			pick: ['DateTimeOriginal', 'GPSLatitude', 'GPSLongitude'],
+			tiff: true,
+			exif: true,
 			gps: true,
+			xmp: false,
+			icc: false,
+			iptc: false,
 		});
+		console.log('[extractExif] raw data:', JSON.stringify(data));
 		if (!data) return { takenAt: null, lat: null, lng: null };
 		const gps = await exifr.gps(filePath).catch(() => null);
+		console.log('[extractExif] gps:', JSON.stringify(gps));
 		return {
 			takenAt:
 				data.DateTimeOriginal instanceof Date ? data.DateTimeOriginal : null,
 			lat: gps?.latitude ?? null,
 			lng: gps?.longitude ?? null,
 		};
-	} catch {
+	} catch (err) {
+		console.log('[extractExif] error:', err);
 		return { takenAt: null, lat: null, lng: null };
 	}
 }
