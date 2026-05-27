@@ -37,7 +37,7 @@ export const ALLOWED_MIME_TYPES = [
 	'video/webm',
 ] as const;
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function mimeToResourceType(
 	mimeType: string,

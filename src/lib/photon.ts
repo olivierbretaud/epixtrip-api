@@ -34,8 +34,6 @@ export async function reverseGeocode(
 	const data = (await res.json()) as PhotonResult;
 	const props = data.features[0]?.properties;
 	if (!props) return null;
-	console.log(props);
-
 	return {
 		city: props.city ?? props.district ?? props.name ?? null,
 		region: props.county ?? null,

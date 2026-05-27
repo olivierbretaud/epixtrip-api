@@ -47,16 +47,32 @@ async function extractExif(
 function streamToFile(
 	readable: NodeJS.ReadableStream,
 	dest: string,
+	maxSize: number,
 ): Promise<number> {
 	return new Promise((resolve, reject) => {
 		let size = 0;
+		let aborted = false;
 		const writer = createWriteStream(dest);
+
 		readable.on('data', (chunk: Buffer) => {
+			if (aborted) return;
 			size += chunk.length;
+			if (size > maxSize) {
+				aborted = true;
+				writer.destroy();
+				readable.resume();
+				reject(new AppError(413, ''));
+			}
 		});
-		readable.on('error', reject);
-		writer.on('error', reject);
-		writer.on('finish', () => resolve(size));
+		readable.on('error', (err) => {
+			if (!aborted) reject(err);
+		});
+		writer.on('error', (err) => {
+			if (!aborted) reject(err);
+		});
+		writer.on('finish', () => {
+			if (!aborted) resolve(size);
+		});
 		readable.pipe(writer);
 	});
 }
@@ -103,24 +119,37 @@ export function createMediaService(fastify: FastifyInstance) {
 				const uuid = randomUUID();
 				const tempPath = join(TEMP_DIR, `${uuid}${ext}`);
 
-				const size = await streamToFile(file.file, tempPath);
-
-				if (size > MAX_FILE_SIZE) {
-					unlinkSync(tempPath);
-					throw new AppError(
-						413,
-						`File "${file.filename}" exceeds the 10 MB limit`,
-					);
-				}
+				const size = await streamToFile(
+					file.file,
+					tempPath,
+					MAX_FILE_SIZE,
+				).catch((err) => {
+					try {
+						unlinkSync(tempPath);
+					} catch {
+						/* already gone */
+					}
+					if (err instanceof AppError)
+						throw new AppError(
+							413,
+							`File "${file.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024} MB limit`,
+						);
+					throw new AppError(500, `Failed to read file "${file.filename}"`);
+				});
 
 				const exif = await extractExif(tempPath);
 
-				if (exif.lat === null || exif.lng === null) {
+				if (
+					exif.lat === null ||
+					exif.lng === null ||
+					!Number.isFinite(exif.lat) ||
+					!Number.isFinite(exif.lng)
+				) {
 					unlinkSync(tempPath);
 					throw new AppError(422, `File "${file.filename}" has no GPS data`);
 				}
 
-				const geo = await reverseGeocode(exif.lat, exif.lng);
+				const geo = await reverseGeocode(exif.lat, exif.lng).catch(() => null);
 
 				const publicId = `${CLOUDINARY_FOLDER}/${travelId}/${uuid}`;
 				const resourceType = mimeToResourceType(file.mimetype);
@@ -128,6 +157,8 @@ export function createMediaService(fastify: FastifyInstance) {
 				let url: string;
 				try {
 					url = await uploadToCloudinary(tempPath, publicId, resourceType);
+				} catch {
+					throw new AppError(502, `Failed to upload file "${file.filename}"`);
 				} finally {
 					unlinkSync(tempPath);
 				}
