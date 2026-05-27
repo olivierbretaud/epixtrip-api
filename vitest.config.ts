@@ -9,6 +9,9 @@ export default defineConfig({
 			NODE_ENV: 'test',
 			PORT: '3001',
 			HOST: '0.0.0.0',
+			CLOUDINARY_CLOUD_NAME: 'test',
+			CLOUDINARY_API_KEY: 'test',
+			CLOUDINARY_API_SECRET: 'test',
 		},
 	},
 });
