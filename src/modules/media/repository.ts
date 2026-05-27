@@ -63,7 +63,7 @@ export function createMediaRepository(fastify: FastifyInstance) {
 
 		async findByTravel(travelId: number): Promise<MediaRow[]> {
 			return fastify.prisma.media.findMany({
-				where: { travelId },
+				where: { travelId, lat: { not: null }, lng: { not: null } },
 				select: mediaSelect,
 				orderBy: [
 					{ takenAt: { sort: 'asc', nulls: 'last' } },

@@ -32,15 +32,12 @@ export const mediaListResponse = z.array(mediaResponse);
 
 export const ALLOWED_MIME_TYPES = [
 	'image/jpeg',
-	'image/png',
 	'image/webp',
-	'image/gif',
 	'video/mp4',
-	'video/quicktime',
 	'video/webm',
 ] as const;
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export function mimeToResourceType(
 	mimeType: string,

@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import type { MediaRow } from './repository.js';
 import {
 	mediaListResponse,
 	mediaParams,
@@ -8,6 +9,28 @@ import {
 	updateMediaBody,
 } from './schema.js';
 import { createMediaService } from './service.js';
+
+function toMediaDto(m: MediaRow) {
+	return {
+		id: m.id,
+		url: m.url,
+		mimeType: m.mimeType,
+		size: m.size,
+		takenAt:
+			m.takenAt instanceof Date ? m.takenAt.toISOString() : (m.takenAt ?? null),
+		lat: m.lat != null && Number.isFinite(m.lat) ? m.lat : null,
+		lng: m.lng != null && Number.isFinite(m.lng) ? m.lng : null,
+		place: m.place ?? null,
+		description: m.description ?? null,
+		city: m.city ?? null,
+		region: m.region ?? null,
+		state: m.state ?? null,
+		countryCode: m.countryCode ?? null,
+		travelId: m.travelId,
+		createdAt:
+			m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
+	};
+}
 
 const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 	const mediaService = createMediaService(fastify);
@@ -28,11 +51,7 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request) => {
 			const medias = await mediaService.getByTravel(request.params.travelId);
-			return medias.map((m) => ({
-				...m,
-				takenAt: m.takenAt?.toISOString() ?? null,
-				createdAt: m.createdAt.toISOString(),
-			}));
+			return medias.map(toMediaDto);
 		},
 	);
 
@@ -43,7 +62,7 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 				tags: ['Media'],
 				summary: 'Upload media files to a travel',
 				description:
-					'Uploads one or more image/video files (JPEG, PNG, WebP, GIF, MP4, MOV, WebM). Max 5 MB per file. Requires authentication.',
+					'Uploads one or more image/video files (JPEG, PNG, WebP, MP4, WebM). Max 10 MB per file. Requires authentication.',
 				security: [{ bearerAuth: [] }],
 				consumes: ['multipart/form-data'],
 				body: {
@@ -80,13 +99,7 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 			const files = request.files();
 			const created = await mediaService.uploadMany(travelId, files);
 
-			return reply.code(201).send(
-				created.map((m) => ({
-					...m,
-					takenAt: m.takenAt?.toISOString() ?? null,
-					createdAt: m.createdAt.toISOString(),
-				})),
-			);
+			return reply.code(201).send(created.map(toMediaDto));
 		},
 	);
 
@@ -116,11 +129,7 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 				request.params.mediaId,
 				request.body,
 			);
-			return {
-				...media,
-				takenAt: media.takenAt?.toISOString() ?? null,
-				createdAt: media.createdAt.toISOString(),
-			};
+			return toMediaDto(media);
 		},
 	);
 
@@ -146,11 +155,7 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request) => {
 			const media = await mediaService.deleteOne(request.params.mediaId);
-			return {
-				...media,
-				takenAt: media.takenAt?.toISOString() ?? null,
-				createdAt: media.createdAt.toISOString(),
-			};
+			return toMediaDto(media);
 		},
 	);
 };

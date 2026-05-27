@@ -109,7 +109,7 @@ export function createMediaService(fastify: FastifyInstance) {
 					unlinkSync(tempPath);
 					throw new AppError(
 						413,
-						`File "${file.filename}" exceeds the 5 MB limit`,
+						`File "${file.filename}" exceeds the 10 MB limit`,
 					);
 				}
 
