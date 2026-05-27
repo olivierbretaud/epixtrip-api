@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createWriteStream, mkdirSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
 import type { MultipartFile } from '@fastify/multipart';
 import exifr from 'exifr';
@@ -19,7 +20,7 @@ import {
 	mimeToResourceType,
 } from './schema.js';
 
-const TEMP_DIR = join(process.cwd(), 'tmp', 'medias');
+const TEMP_DIR = join(tmpdir(), 'medias');
 const CLOUDINARY_FOLDER = `epixtrip/${env.NODE_ENV}`;
 
 async function extractExif(
