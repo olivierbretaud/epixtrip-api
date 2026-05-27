@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "medias" ADD COLUMN     "lat" DOUBLE PRECISION,
+ADD COLUMN     "lng" DOUBLE PRECISION,
+ADD COLUMN     "takenAt" TIMESTAMP(3);

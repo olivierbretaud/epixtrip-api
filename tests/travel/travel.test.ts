@@ -1,11 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestApp } from '../helpers/buildTestApp.js';
 
+vi.mock('../../src/lib/cloudinary.js', () => ({
+	deleteFromCloudinary: vi.fn().mockResolvedValue(undefined),
+	uploadToCloudinary: vi.fn().mockResolvedValue('https://res.cloudinary.com/test/image.jpg'),
+}));
+
 const mockTravel = {
 	id: 1,
 	title: 'My Trip to Paris',
 	description: 'A wonderful trip',
 	isPublic: false,
+	cover: null,
 	authorId: 1,
 	createdAt: new Date('2024-01-01T00:00:00.000Z'),
 	updatedAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -24,6 +30,9 @@ function makePrismaMock() {
 			update: vi.fn(),
 			delete: vi.fn(),
 		},
+		media: {
+			findMany: vi.fn(),
+		},
 	};
 }
 
@@ -31,9 +40,9 @@ function makeToken(app: ReturnType<typeof buildTestApp>, userId = 1) {
 	return app.jwt.sign({ userId, email: 'john@example.com', role: 'Member' });
 }
 
-// ─── GET /api/travels ────────────────────────────────────────────────────────
+// ─── GET /api/travel ────────────────────────────────────────────────────────
 
-describe('GET /api/travels', () => {
+describe('GET /api/travel', () => {
 	let app: ReturnType<typeof buildTestApp>;
 	let prisma: ReturnType<typeof makePrismaMock>;
 
@@ -55,7 +64,7 @@ describe('GET /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'GET',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 		});
 
@@ -74,7 +83,7 @@ describe('GET /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'GET',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 		});
 
@@ -83,14 +92,14 @@ describe('GET /api/travels', () => {
 	});
 
 	it('returns 401 without token', async () => {
-		const res = await app.inject({ method: 'GET', url: '/api/travels' });
+		const res = await app.inject({ method: 'GET', url: '/api/travel' });
 		expect(res.statusCode).toBe(401);
 	});
 });
 
-// ─── GET /api/travels/:id ─────────────────────────────────────────────────────
+// ─── GET /api/travel/:id ─────────────────────────────────────────────────────
 
-describe('GET /api/travels/:id', () => {
+describe('GET /api/travel/:id', () => {
 	let app: ReturnType<typeof buildTestApp>;
 	let prisma: ReturnType<typeof makePrismaMock>;
 
@@ -107,7 +116,7 @@ describe('GET /api/travels/:id', () => {
 	it('returns 200 with the travel', async () => {
 		prisma.travel.findUnique.mockResolvedValue(mockTravel);
 
-		const res = await app.inject({ method: 'GET', url: '/api/travels/1' });
+		const res = await app.inject({ method: 'GET', url: '/api/travel/1' });
 
 		expect(res.statusCode).toBe(200);
 		const body = res.json<typeof mockTravel>();
@@ -119,21 +128,21 @@ describe('GET /api/travels/:id', () => {
 	it('returns 404 when travel does not exist', async () => {
 		prisma.travel.findUnique.mockResolvedValue(null);
 
-		const res = await app.inject({ method: 'GET', url: '/api/travels/99' });
+		const res = await app.inject({ method: 'GET', url: '/api/travel/99' });
 
 		expect(res.statusCode).toBe(404);
 		expect(res.json<{ message: string }>().message).toBe('Travel not found');
 	});
 
 	it('returns 400 on non-numeric id', async () => {
-		const res = await app.inject({ method: 'GET', url: '/api/travels/abc' });
+		const res = await app.inject({ method: 'GET', url: '/api/travel/abc' });
 		expect(res.statusCode).toBe(400);
 	});
 });
 
-// ─── POST /api/travels ───────────────────────────────────────────────────────
+// ─── POST /api/travel ───────────────────────────────────────────────────────
 
-describe('POST /api/travels', () => {
+describe('POST /api/travel', () => {
 	let app: ReturnType<typeof buildTestApp>;
 	let prisma: ReturnType<typeof makePrismaMock>;
 
@@ -155,7 +164,7 @@ describe('POST /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'POST',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'My Trip to Paris', description: 'A wonderful trip' },
 		});
@@ -174,7 +183,7 @@ describe('POST /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'POST',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'Quick Trip' },
 		});
@@ -191,7 +200,7 @@ describe('POST /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'POST',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'Public Trip', isPublic: true },
 		});
@@ -206,7 +215,7 @@ describe('POST /api/travels', () => {
 
 		const res = await app.inject({
 			method: 'POST',
-			url: '/api/travels',
+			url: '/api/travel',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { description: 'No title here' },
 		});
@@ -217,7 +226,7 @@ describe('POST /api/travels', () => {
 	it('returns 401 without token', async () => {
 		const res = await app.inject({
 			method: 'POST',
-			url: '/api/travels',
+			url: '/api/travel',
 			payload: { title: 'My Trip' },
 		});
 
@@ -225,9 +234,9 @@ describe('POST /api/travels', () => {
 	});
 });
 
-// ─── PUT /api/travels/:id ─────────────────────────────────────────────────────
+// ─── PUT /api/travel/:id ─────────────────────────────────────────────────────
 
-describe('PUT /api/travels/:id', () => {
+describe('PUT /api/travel/:id', () => {
 	let app: ReturnType<typeof buildTestApp>;
 	let prisma: ReturnType<typeof makePrismaMock>;
 
@@ -251,7 +260,7 @@ describe('PUT /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'PUT',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'Updated Title' },
 		});
@@ -268,7 +277,7 @@ describe('PUT /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'PUT',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'Hijack' },
 		});
@@ -284,7 +293,7 @@ describe('PUT /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'PUT',
-			url: '/api/travels/99',
+			url: '/api/travel/99',
 			headers: { authorization: `Bearer ${token}` },
 			payload: { title: 'Ghost' },
 		});
@@ -295,7 +304,7 @@ describe('PUT /api/travels/:id', () => {
 	it('returns 401 without token', async () => {
 		const res = await app.inject({
 			method: 'PUT',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 			payload: { title: 'No auth' },
 		});
 
@@ -303,9 +312,9 @@ describe('PUT /api/travels/:id', () => {
 	});
 });
 
-// ─── DELETE /api/travels/:id ──────────────────────────────────────────────────
+// ─── DELETE /api/travel/:id ──────────────────────────────────────────────────
 
-describe('DELETE /api/travels/:id', () => {
+describe('DELETE /api/travel/:id', () => {
 	let app: ReturnType<typeof buildTestApp>;
 	let prisma: ReturnType<typeof makePrismaMock>;
 
@@ -321,6 +330,7 @@ describe('DELETE /api/travels/:id', () => {
 
 	it('returns 200 on successful deletion', async () => {
 		prisma.travel.findUnique.mockResolvedValue(mockTravel);
+		prisma.media.findMany.mockResolvedValue([]);
 		prisma.travel.delete.mockResolvedValue(mockTravel);
 
 		await app.ready();
@@ -328,7 +338,7 @@ describe('DELETE /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'DELETE',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 			headers: { authorization: `Bearer ${token}` },
 		});
 
@@ -346,7 +356,7 @@ describe('DELETE /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'DELETE',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 			headers: { authorization: `Bearer ${token}` },
 		});
 
@@ -361,7 +371,7 @@ describe('DELETE /api/travels/:id', () => {
 
 		const res = await app.inject({
 			method: 'DELETE',
-			url: '/api/travels/99',
+			url: '/api/travel/99',
 			headers: { authorization: `Bearer ${token}` },
 		});
 
@@ -371,7 +381,7 @@ describe('DELETE /api/travels/:id', () => {
 	it('returns 401 without token', async () => {
 		const res = await app.inject({
 			method: 'DELETE',
-			url: '/api/travels/1',
+			url: '/api/travel/1',
 		});
 
 		expect(res.statusCode).toBe(401);
