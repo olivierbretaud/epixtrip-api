@@ -47,16 +47,26 @@ async function extractExif(
 function streamToFile(
 	readable: NodeJS.ReadableStream,
 	dest: string,
+	maxSize: number,
 ): Promise<number> {
 	return new Promise((resolve, reject) => {
 		let size = 0;
+		let aborted = false;
 		const writer = createWriteStream(dest);
+
 		readable.on('data', (chunk: Buffer) => {
+			if (aborted) return;
 			size += chunk.length;
+			if (size > maxSize) {
+				aborted = true;
+				writer.destroy();
+				readable.resume();
+				reject(new AppError(413, ''));
+			}
 		});
-		readable.on('error', reject);
-		writer.on('error', reject);
-		writer.on('finish', () => resolve(size));
+		readable.on('error', (err) => { if (!aborted) reject(err); });
+		writer.on('error', (err) => { if (!aborted) reject(err); });
+		writer.on('finish', () => { if (!aborted) resolve(size); });
 		readable.pipe(writer);
 	});
 }
@@ -103,17 +113,12 @@ export function createMediaService(fastify: FastifyInstance) {
 				const uuid = randomUUID();
 				const tempPath = join(TEMP_DIR, `${uuid}${ext}`);
 
-				const size = await streamToFile(file.file, tempPath).catch(() => {
+				const size = await streamToFile(file.file, tempPath, MAX_FILE_SIZE).catch((err) => {
+					try { unlinkSync(tempPath); } catch { /* already gone */ }
+					if (err instanceof AppError)
+						throw new AppError(413, `File "${file.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024} MB limit`);
 					throw new AppError(500, `Failed to read file "${file.filename}"`);
 				});
-
-				if (size > MAX_FILE_SIZE) {
-					unlinkSync(tempPath);
-					throw new AppError(
-						413,
-						`File "${file.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024} MB limit`,
-					);
-				}
 
 				const exif = await extractExif(tempPath);
 
