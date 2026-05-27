@@ -24,12 +24,17 @@ const swaggerTransform: SwaggerTransform = (input) => {
 	const schema = input.schema ?? {};
 	const { body, consumes } = schema as typeof schema & { consumes?: string[] };
 	if (body && !isZodSchema(body)) {
-		const { body: _body, consumes: _consumes, ...rest } = schema as typeof schema & {
+		const {
+			body: _body,
+			consumes: _consumes,
+			...rest
+		} = schema as typeof schema & {
 			consumes?: string[];
 		};
 		const result = jsonSchemaTransform({ ...input, schema: rest });
 		result.schema.body = body;
-		if (consumes) (result.schema as Record<string, unknown>).consumes = consumes;
+		if (consumes)
+			(result.schema as Record<string, unknown>).consumes = consumes;
 		return result;
 	}
 	return jsonSchemaTransform(input);

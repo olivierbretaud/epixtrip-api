@@ -12,12 +12,14 @@ const strongPassword = z
 const isDev = env.NODE_ENV === 'development';
 
 export const loginBody = z.object({
-	email: isDev && env.AUTH_EMAIL
-		? z.string().min(1).default(env.AUTH_EMAIL)
-		: z.string().min(1),
-	password: isDev && env.AUTH_PWD
-		? strongPassword.default(env.AUTH_PWD)
-		: strongPassword,
+	email:
+		isDev && env.AUTH_EMAIL
+			? z.string().min(1).default(env.AUTH_EMAIL)
+			: z.string().min(1),
+	password:
+		isDev && env.AUTH_PWD
+			? strongPassword.default(env.AUTH_PWD)
+			: strongPassword,
 });
 
 export const loginResponse = z.object({

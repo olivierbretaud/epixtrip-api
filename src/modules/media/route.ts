@@ -1,7 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { mediaListResponse, mediaParams, mediaResponse, updateMediaBody } from './schema.js';
+import {
+	mediaListResponse,
+	mediaParams,
+	mediaResponse,
+	updateMediaBody,
+} from './schema.js';
 import { createMediaService } from './service.js';
 
 const mediaRoutes: FastifyPluginAsync = async (fastify) => {
@@ -91,7 +96,8 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: {
 				tags: ['Media'],
 				summary: 'Update media metadata',
-				description: 'Updates place and/or description of a media file. Requires authentication.',
+				description:
+					'Updates place and/or description of a media file. Requires authentication.',
 				security: [{ bearerAuth: [] }],
 				params: mediaParams.extend({
 					mediaId: z.coerce.number().int().positive(),
@@ -106,8 +112,15 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 			preHandler: [fastify.authenticate],
 		},
 		async (request) => {
-			const media = await mediaService.updateOne(request.params.mediaId, request.body);
-			return { ...media, takenAt: media.takenAt?.toISOString() ?? null, createdAt: media.createdAt.toISOString() };
+			const media = await mediaService.updateOne(
+				request.params.mediaId,
+				request.body,
+			);
+			return {
+				...media,
+				takenAt: media.takenAt?.toISOString() ?? null,
+				createdAt: media.createdAt.toISOString(),
+			};
 		},
 	);
 
@@ -133,7 +146,11 @@ const mediaRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request) => {
 			const media = await mediaService.deleteOne(request.params.mediaId);
-			return { ...media, takenAt: media.takenAt?.toISOString() ?? null, createdAt: media.createdAt.toISOString() };
+			return {
+				...media,
+				takenAt: media.takenAt?.toISOString() ?? null,
+				createdAt: media.createdAt.toISOString(),
+			};
 		},
 	);
 };
