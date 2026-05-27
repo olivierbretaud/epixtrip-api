@@ -103,13 +103,15 @@ export function createMediaService(fastify: FastifyInstance) {
 				const uuid = randomUUID();
 				const tempPath = join(TEMP_DIR, `${uuid}${ext}`);
 
-				const size = await streamToFile(file.file, tempPath);
+				const size = await streamToFile(file.file, tempPath).catch(() => {
+					throw new AppError(500, `Failed to read file "${file.filename}"`);
+				});
 
 				if (size > MAX_FILE_SIZE) {
 					unlinkSync(tempPath);
 					throw new AppError(
 						413,
-						`File "${file.filename}" exceeds the 10 MB limit`,
+						`File "${file.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024} MB limit`,
 					);
 				}
 
@@ -120,7 +122,7 @@ export function createMediaService(fastify: FastifyInstance) {
 					throw new AppError(422, `File "${file.filename}" has no GPS data`);
 				}
 
-				const geo = await reverseGeocode(exif.lat, exif.lng);
+				const geo = await reverseGeocode(exif.lat, exif.lng).catch(() => null);
 
 				const publicId = `${CLOUDINARY_FOLDER}/${travelId}/${uuid}`;
 				const resourceType = mimeToResourceType(file.mimetype);
@@ -128,6 +130,8 @@ export function createMediaService(fastify: FastifyInstance) {
 				let url: string;
 				try {
 					url = await uploadToCloudinary(tempPath, publicId, resourceType);
+				} catch {
+					throw new AppError(502, `Failed to upload file "${file.filename}"`);
 				} finally {
 					unlinkSync(tempPath);
 				}

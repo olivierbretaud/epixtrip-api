@@ -41,6 +41,7 @@ const swaggerTransform: SwaggerTransform = (input) => {
 };
 
 import { AppError } from './errors/AppError.js';
+import { MAX_FILE_SIZE } from './modules/media/schema.js';
 import jwtPlugin from './plugins/jwt.js';
 import mailerPlugin from './plugins/mailer.js';
 import prismaPlugin from './plugins/prisma.js';
@@ -130,7 +131,7 @@ export function buildApp() {
 	});
 	app.register(sensible);
 	app.register(import('@fastify/multipart'), {
-		limits: { fileSize: 50 * 1024 * 1024, files: 20 },
+		limits: { fileSize: MAX_FILE_SIZE, files: 20 },
 	});
 	app.register(prismaPlugin);
 	app.register(mailerPlugin);
