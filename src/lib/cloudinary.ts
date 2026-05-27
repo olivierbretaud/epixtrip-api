@@ -10,11 +10,15 @@ cloudinary.config({
 const IMAGE_TRANSFORMATION = 'q_auto,f_auto';
 const VIDEO_TRANSFORMATION = 'q_auto,vc_auto';
 
-function buildOptimizedUrl(publicId: string, resourceType: 'image' | 'video' | 'raw'): string {
+function buildOptimizedUrl(
+	publicId: string,
+	resourceType: 'image' | 'video' | 'raw',
+): string {
 	if (resourceType === 'raw') {
 		return cloudinary.url(publicId, { secure: true, resource_type: 'raw' });
 	}
-	const transformation = resourceType === 'video' ? VIDEO_TRANSFORMATION : IMAGE_TRANSFORMATION;
+	const transformation =
+		resourceType === 'video' ? VIDEO_TRANSFORMATION : IMAGE_TRANSFORMATION;
 	return cloudinary.url(publicId, {
 		secure: true,
 		resource_type: resourceType,
@@ -46,4 +50,10 @@ export async function deleteFromCloudinary(
 	resourceType: 'image' | 'video' | 'raw',
 ): Promise<void> {
 	await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+}
+
+export async function deleteFolderFromCloudinary(
+	folder: string,
+): Promise<void> {
+	await cloudinary.api.delete_folder(folder);
 }

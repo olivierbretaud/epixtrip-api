@@ -1,6 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { AppError } from '../../errors/AppError.js';
-import { deleteFromCloudinary } from '../../lib/cloudinary.js';
+import {
+	deleteFolderFromCloudinary,
+	deleteFromCloudinary,
+} from '../../lib/cloudinary.js';
 import { mimeToResourceType } from '../media/schema.js';
 import { createTravelRepository } from './repository.js';
 
@@ -92,6 +95,13 @@ export function createTravelService(fastify: FastifyInstance) {
 					),
 				),
 			);
+			if (medias.length > 0) {
+				const folder = medias[0].key.substring(
+					0,
+					medias[0].key.lastIndexOf('/'),
+				);
+				await deleteFolderFromCloudinary(folder).catch(() => null);
+			}
 			return { message: 'Travel deleted successfully' };
 		},
 	};

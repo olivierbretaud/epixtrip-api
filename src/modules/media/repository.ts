@@ -65,7 +65,10 @@ export function createMediaRepository(fastify: FastifyInstance) {
 			return fastify.prisma.media.findMany({
 				where: { travelId },
 				select: mediaSelect,
-				orderBy: [{ takenAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+				orderBy: [
+					{ takenAt: { sort: 'asc', nulls: 'last' } },
+					{ createdAt: 'asc' },
+				],
 			}) as Promise<MediaRow[]>;
 		},
 
@@ -88,11 +91,15 @@ export function createMediaRepository(fastify: FastifyInstance) {
 		},
 
 		async isCover(id: number): Promise<boolean> {
-			const count = await fastify.prisma.travel.count({ where: { coverId: id } });
+			const count = await fastify.prisma.travel.count({
+				where: { coverId: id },
+			});
 			return count > 0;
 		},
 
-		async findFirstImageByTravel(travelId: number): Promise<{ id: number } | null> {
+		async findFirstImageByTravel(
+			travelId: number,
+		): Promise<{ id: number } | null> {
 			return fastify.prisma.media.findFirst({
 				where: { travelId, mimeType: { startsWith: 'image/' } },
 				select: { id: true },
